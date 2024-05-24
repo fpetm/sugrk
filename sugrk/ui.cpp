@@ -76,12 +76,19 @@ bool Window::Update(RayTracerConfig &conf, Scene &scene,
   ImGui::SliderInt("Width", &conf.width, 0, 500);
   ImGui::SliderInt("Height", &conf.height, 0, 500);
   ImGui::SliderFloat("Blue", &conf.blue, 0.0, 1.0);
-  if (ImGui::Button("Render!")) {
-    raytracer.Render(m_RenderBuffer, scene, conf);
+  if (raytracer.Rendering()) {
+    if (ImGui::Button("Stop")) {
+      raytracer.Stop();
+    }
+  } else {
+    if (ImGui::Button("Render!")) {
+      m_ThreadPool.enqueue([&](){raytracer.Render(m_RenderBuffer, scene, conf);});
+    }
   }
   ImGui::End();
 
   ImGui::Begin("Render buffer");
+  m_RenderBuffer->UpdateTexture();
   ImGui::Image((void *)(intptr_t)m_RenderBuffer->GetGLTexID(),
                ImVec2(m_RenderBuffer->Width(), m_RenderBuffer->Height()));
   ImGui::End();

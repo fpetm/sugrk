@@ -1,3 +1,4 @@
+#pragma once
 #include "log.hpp"
 #include <cstdint>
 
