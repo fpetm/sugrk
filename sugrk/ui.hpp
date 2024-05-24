@@ -6,7 +6,9 @@
 #if defined(IMGUI_IMPL_OPENGL_ES2)
 #include <GLES2/gl2.h>
 #endif
+#include "image.hpp"
 #include "log.hpp"
+#include "raytracer.hpp"
 #include <GLFW/glfw3.h> // Will drag system OpenGL headers
 
 #include "log.hpp"
@@ -21,14 +23,20 @@
 #include "../libs/emscripten/emscripten_mainloop_stub.h"
 #endif
 namespace sugrk {
-  class Window {
-    public:
-    void Init(int width = 1280, int height = 720);
-    bool Update();
-    void Stop();
-    private:
-    GLFWwindow* m_Window;
-    ImVec4 m_ClearColor;
-    int m_Width, m_Height;
-  };
-}
+class Window {
+public:
+  void Init(int width = 1280, int height = 720);
+  bool Update(RayTracerConfig &conf, Scene &scene, RayTracer<RGBA8> &raytracer);
+  void Stop();
+
+  void SetBuffer(std::shared_ptr<Image<RGBA8>> render_buffer) {
+    m_RenderBuffer = render_buffer;
+  }
+
+private:
+  std::shared_ptr<Image<RGBA8>> m_RenderBuffer;
+  GLFWwindow *m_Window;
+  ImVec4 m_ClearColor;
+  int m_Width, m_Height;
+};
+} // namespace sugrk

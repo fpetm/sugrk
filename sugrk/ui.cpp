@@ -1,15 +1,17 @@
 #include "ui.hpp"
+#include "raytracer.hpp"
 namespace sugrk {
-  static void glfw_error_callback(int error, const char *description) {
-    SG_ERROR("GLFW Error {}: {}", error, description);
+static void glfw_error_callback(int error, const char *description) {
+  SG_ERROR("GLFW Error {}: {}", error, description);
+}
+void Window::Init(int width, int height) {
+  m_Width = width;
+  m_Height = height;
+  glfwSetErrorCallback(glfw_error_callback);
+  if (!glfwInit()) {
+    SG_CRITICAL("Failed to initalize GLFW!");
+    return;
   }
-  void Window::Init(int width, int height) {
-    m_Width = width; m_Height = height;
-    glfwSetErrorCallback(glfw_error_callback);
-    if (!glfwInit()) {
-      SG_CRITICAL("Failed to initalize GLFW!");
-      return;
-    }
 #if defined(IMGUI_IMPL_OPENGL_ES2)
   // GL ES 2.0 + GLSL 100
   const char *glsl_version = "#version 100";
@@ -61,36 +63,47 @@ namespace sugrk {
   io.Fonts->AddFontFromFileTTF("resources/fonts/Roboto-Medium.ttf", 14.0f);
 
   m_ClearColor = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+}
+
+bool Window::Update(RayTracerConfig &conf, Scene &scene,
+                    RayTracer<RGBA8> &raytracer) {
+  glfwPollEvents();
+  ImGui_ImplOpenGL3_NewFrame();
+  ImGui_ImplGlfw_NewFrame();
+  ImGui::NewFrame();
+
+  ImGui::Begin("Render settings");
+  ImGui::SliderInt("Width", &conf.width, 0, 500);
+  ImGui::SliderInt("Height", &conf.height, 0, 500);
+  ImGui::SliderFloat("Blue", &conf.blue, 0.0, 1.0);
+  if (ImGui::Button("Render!")) {
+    raytracer.Render(m_RenderBuffer, scene, conf);
   }
+  ImGui::End();
 
-  bool Window::Update() {
-    glfwPollEvents();
-    ImGui_ImplOpenGL3_NewFrame();
-    ImGui_ImplGlfw_NewFrame();
-    ImGui::NewFrame();
+  ImGui::Begin("Render buffer");
+  ImGui::Image((void *)(intptr_t)m_RenderBuffer->GetGLTexID(),
+               ImVec2(m_RenderBuffer->Width(), m_RenderBuffer->Height()));
+  ImGui::End();
 
-    bool show_demo_window = true;
-    if (show_demo_window)
-      ImGui::ShowDemoWindow(&show_demo_window);
+  ImGui::Render();
+  glfwGetFramebufferSize(m_Window, &m_Width, &m_Height);
+  glViewport(0, 0, m_Height, m_Height);
+  glClearColor(m_ClearColor.x * m_ClearColor.w, m_ClearColor.y * m_ClearColor.w,
+               m_ClearColor.z * m_ClearColor.w, m_ClearColor.w);
+  glClear(GL_COLOR_BUFFER_BIT);
+  ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
-    ImGui::Render();
-    glfwGetFramebufferSize(m_Window, &m_Width, &m_Height);
-    glViewport(0, 0, m_Height, m_Height);
-    glClearColor(m_ClearColor.x * m_ClearColor.w, m_ClearColor.y * m_ClearColor.w,
-                 m_ClearColor.z * m_ClearColor.w, m_ClearColor.w);
-    glClear(GL_COLOR_BUFFER_BIT);
-    ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+  glfwSwapBuffers(m_Window);
+  return !glfwWindowShouldClose(m_Window);
+}
 
-    glfwSwapBuffers(m_Window);
-    return !glfwWindowShouldClose(m_Window);
-  }
-
-  void Window::Stop() {
+void Window::Stop() {
   ImGui_ImplOpenGL3_Shutdown();
   ImGui_ImplGlfw_Shutdown();
   ImGui::DestroyContext();
 
   glfwDestroyWindow(m_Window);
   glfwTerminate();
-  }
 }
+} // namespace sugrk
