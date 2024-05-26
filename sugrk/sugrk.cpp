@@ -17,14 +17,15 @@ int main(int, char **) {
   sugrk::Window wnd;
   wnd.Init(800, 600);
   RayTracer<RGBA8> raytracer;
-  RayTracerConfig conf = {300, 200, 0.1};
-  Scene scene = {};
+  RayTracerConfig conf;
   std::shared_ptr<Image<RGBA8>> render_buffer =
       std::make_shared<Image<RGBA8>>(conf.width, conf.height);
+  Scene scene;
+  scene.Add(std::make_shared<Sphere>(Vec3(0,0,-1), 0.5));
+  scene.Add(std::make_shared<Sphere>(Vec3(0, -100.5, -1), 100));
   wnd.SetBuffer(render_buffer);
 
-  while (wnd.Update(conf, scene, raytracer)) {
-  }
+  while (wnd.Update(conf, scene, raytracer)) {}
 
   wnd.Stop();
 

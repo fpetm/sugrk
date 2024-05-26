@@ -1,9 +1,6 @@
 #pragma once
+#include "util.hpp"
+#include "raytracer.hpp"
 
 namespace sugrk {
-  class Scene {
-    public:
-    Scene() {
-    }
-  };
 }

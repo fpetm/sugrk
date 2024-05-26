@@ -75,7 +75,9 @@ bool Window::Update(RayTracerConfig &conf, Scene &scene,
   ImGui::Begin("Render settings");
   ImGui::SliderInt("Width", &conf.width, 0, 500);
   ImGui::SliderInt("Height", &conf.height, 0, 500);
-  ImGui::SliderFloat("Blue", &conf.blue, 0.0, 1.0);
+  ImGui::SliderInt("Samples/Pixel", &conf.samples_per_pixel, 1, 32);
+  ImGui::SliderFloat("Focal length", &conf.focal_length, 0.0, 2.0);
+  ImGui::SliderFloat("Viewport", &conf.viewport_height, 0.0, 2.0);
   if (raytracer.Rendering()) {
     if (ImGui::Button("Stop")) {
       raytracer.Stop();
